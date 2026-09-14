@@ -1,67 +1,343 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { ChatMessage, LiveTrafficTelemetry } from "@/lib/types";
+import { TrafficTelemetryCard } from "@/components/TrafficTelemetryCard";
+import { RagCitationBadge } from "@/components/RagCitationBadge";
+import { PromptSuggestions } from "@/components/PromptSuggestions";
+import {
+  Send,
+  Navigation,
+  Bot,
+  User,
+  RotateCcw,
+  Sparkles,
+  Car,
+  Activity,
+  MapPin,
+  Clock,
+  Layers,
+} from "lucide-react";
 
 export default function Home() {
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      content:
+        "**Namaskaram! I am your Hyderabad Transit AI Specialist.**\n\nI combine local route intelligence across 25+ Hyderabad arterial corridors with real-time TomTom sensor telemetry. Ask me about live choke points, flyover vs underpass decisions, monsoon waterlogging risks, or fastest commute routes right now.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Maintain live IST clock
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
+
+  const handleSubmit = async (textToSend?: string) => {
+    const query = (textToSend || input).trim();
+    if (!query || loading) return;
+
+    setInput("");
+    const userMsg: ChatMessage = { role: "user", content: query };
+    setMessages((prev) => [...prev, userMsg]);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: query,
+          history: messages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
+
+      const data: {
+        response: string;
+        ragSources: string[];
+        liveTelemetry: LiveTrafficTelemetry | null;
+      } = await res.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data.response,
+          telemetry: data.liveTelemetry,
+          ragSources: data.ragSources,
+        },
+      ]);
+    } catch (err: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "⚠️ **Connection Issue:** Unable to complete traffic query. Please check your network connection or verify API credentials.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content:
+          "Conversation reset. Ready for your next Hyderabad transit or route query!",
+      },
+    ]);
+  };
+
+  // Quick formatter for simple markdown rendering
+  const renderFormattedContent = (content: string) => {
+    return content.split("\n").map((line, idx) => {
+      if (line.startsWith("### ")) {
+        return (
+          <h3 key={idx} className="mt-3 mb-1 text-base font-bold text-indigo-600 dark:text-indigo-400">
+            {line.replace("### ", "")}
+          </h3>
+        );
+      }
+      if (line.startsWith("#### ")) {
+        return (
+          <h4 key={idx} className="mt-2 mb-1 text-sm font-semibold text-slate-800 dark:text-slate-200">
+            {line.replace("#### ", "")}
+          </h4>
+        );
+      }
+      if (line.startsWith("* ") || line.startsWith("- ")) {
+        const itemText = line.substring(2);
+        return (
+          <li key={idx} className="ml-4 list-disc text-sm text-slate-700 dark:text-slate-300">
+            {parseBold(itemText)}
+          </li>
+        );
+      }
+      if (line.trim() === "") {
+        return <div key={idx} className="h-1.5" />;
+      }
+      return (
+        <p key={idx} className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+          {parseBold(line)}
+        </p>
+      );
+    });
+  };
+
+  const parseBold = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={i} className="font-semibold text-slate-900 dark:text-slate-100">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100">
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-500/20">
+              <Navigation className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                  Hyderabad Transit AI
+                </h1>
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  RAG + Agent
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Real-Time Urban Mobility & Route Intelligence
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400">
+              <Clock className="h-3.5 w-3.5 text-indigo-500" />
+              <span>IST: {currentTime || "--:--:--"}</span>
+            </div>
+
+            <button
+              onClick={handleClear}
+              title="Reset conversation"
+              className="rounded-lg border border-slate-200 dark:border-slate-800 p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+      </header>
+
+      {/* Hero Corridor Banner */}
+      <section className="border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-100/50 dark:bg-slate-900/40 px-4 py-2 text-xs">
+        <div className="mx-auto flex max-w-5xl items-center justify-between text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5 text-rose-500" />
+            <span className="font-medium">Active Transit Corridors:</span>
+            <span className="hidden sm:inline">HITEC City • Gachibowli ORR • Cable Bridge • Ameerpet • PVNR Expressway • Airport Link</span>
+            <span className="sm:hidden">25+ Monitored Junctions</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+            <span>Telemetry Live</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Chat Feed */}
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6 sm:px-6">
+        <div className="flex-1 space-y-4">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex gap-3 ${
+                msg.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              {msg.role === "assistant" && (
+                <div className="mt-1 flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
+                  <Bot className="h-4 w-4" />
+                </div>
+              )}
+
+              <div
+                className={`max-w-[88%] sm:max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                  msg.role === "user"
+                    ? "bg-indigo-600 text-white rounded-br-none"
+                    : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-bl-none text-slate-800 dark:text-slate-200"
+                }`}
+              >
+                {msg.role === "user" ? (
+                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                ) : (
+                  <div>
+                    {renderFormattedContent(msg.content)}
+
+                    {/* Render live telemetry card if the agent invoked the live traffic sensor */}
+                    {msg.telemetry && (
+                      <TrafficTelemetryCard telemetry={msg.telemetry} />
+                    )}
+
+                    {/* Render RAG retrieval citation sources */}
+                    {msg.ragSources && msg.ragSources.length > 0 && (
+                      <RagCitationBadge sources={msg.ragSources} />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {msg.role === "user" && (
+                <div className="mt-1 flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  <User className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Loading indicator */}
+          {loading && (
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="rounded-2xl rounded-bl-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                  <div className="flex gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-bounce" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.2s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.4s]" />
+                  </div>
+                  <span>Synthesizing RAG knowledge & fetching live TomTom telemetry...</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Floating suggestion chips */}
+        {messages.length <= 3 && !loading && (
+          <div className="my-4 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+            <PromptSuggestions
+              onSelectPrompt={(p) => handleSubmit(p)}
+              disabled={loading}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+        )}
+
+        {/* Input Bar */}
+        <div className="sticky bottom-4 z-20 mt-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+            className="relative flex items-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-lg shadow-slate-200/50 dark:shadow-slate-950/50"
           >
-            Documentation
-          </a>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about live traffic, bottlenecks, or alternate routes in Hyderabad..."
+              disabled={loading}
+              className="flex-1 bg-transparent px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || loading}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 shadow-md shadow-indigo-600/20"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+
+          <p className="mt-2 text-center text-[11px] text-slate-600 dark:text-slate-400">
+            Powered by Google Gemini 1.5 Flash Agent • TomTom Traffic Flow API • Vector Cosine Similarity
+          </p>
         </div>
       </main>
     </div>

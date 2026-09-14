@@ -1,0 +1,231 @@
+[
+  {
+    "id": "cyber-towers",
+    "name": "Cyber Towers Junction (HITEC City)",
+    "area": "Cyberabad / IT Corridor",
+    "coordinates": { "lat": 17.4504, "lng": 78.3808 },
+    "chokePoints": [
+      "Cyber Towers rotary intersection",
+      "Kondapur to Hitec City descent",
+      "Inorbit mall inward approach"
+    ],
+    "peakHours": "09:00 - 11:30 AM & 17:30 - 21:00 PM (Weekdays)",
+    "trafficPatterns": "Severe bottleneck caused by converging traffic from Kondapur, Madhapur, and Jubilee Hills. Rain causes immediate cascading delays back to KPHB.",
+    "alternateRoutes": [
+      "Use Durgam Cheruvu Cable Bridge bypass to reach Madhapur/Jubilee Hills directly, skipping Cyber Towers signal.",
+      "Take 100 Feet Road via Ayyappa Society to bypass Hitec City main junction towards Gachibowli.",
+      "From KPHB/JNTU, use the Hitec City MMTS station road rather than the main flyover ramp during peak hours."
+    ],
+    "publicTransit": "HITEC City Metro Station (Blue Line) connects directly to Ameerpet and Nagole; TSRTC AC shuttle buses connect to Secunderabad.",
+    "monsoonRisks": "Moderate waterlogging near Shilparamam junction and under the Hitec City flyover ramp."
+  },
+  {
+    "id": "gachibowli-junction",
+    "name": "Gachibowli Flyover & ORR Junction",
+    "area": "Financial District / IT Corridor",
+    "coordinates": { "lat": 17.4401, "lng": 78.3489 },
+    "chokePoints": [
+      "Bio-Diversity Park flyover merge",
+      "Gachibowli stadium cross-road",
+      "ORR Exit 19 ramp towards Financial District"
+    ],
+    "peakHours": "08:30 - 11:00 AM & 17:00 - 20:30 PM",
+    "trafficPatterns": "Heavy corporate commuter influx heading to Microsoft, Wipro, and WaveRock. Merging traffic from Old Bombay Highway creates tailbacks onto the flyover.",
+    "alternateRoutes": [
+      "Take the ISB Road bypass through Nanakramguda to avoid Gachibowli circle entirely.",
+      "Use the Outer Ring Road (ORR) service road for short-haul exits towards Financial District Phase 2.",
+      "From Mehdipatnam, prefer Tolichowki-Raidurgam road instead of Old Bombay Highway."
+    ],
+    "publicTransit": "Raidurg Metro Station is 3.5 km away; electric feeder buses (EV shuttles) connect Raidurg to Wipro Circle.",
+    "monsoonRisks": "Severe waterlogging near Bio-Diversity junction underpass and Telecom Nagar drain outlet."
+  },
+  {
+    "id": "durgam-cheruvu",
+    "name": "Durgam Cheruvu Cable-Stayed Bridge",
+    "area": "Madhapur / Jubilee Hills",
+    "coordinates": { "lat": 17.4334, "lng": 78.3888 },
+    "chokePoints": [
+      "Road No. 45 Jubilee Hills signal",
+      "Inorbit Mall exit ramp",
+      "ITC Kohenur merge lane"
+    ],
+    "peakHours": "10:00 - 12:00 PM & 18:00 - 21:30 PM",
+    "trafficPatterns": "Extremely fast cross-city transit between Jubilee Hills and Hitec City, but signal bottleneck at Road 45 causes up to 1.5 km weekend evening queues.",
+    "alternateRoutes": [
+      "Use Madhapur 100 Feet Road if Road 45 is gridlocked.",
+      "Route via Silent Valley road towards Kavuri Hills to enter Jubilee Hills Road 36."
+    ],
+    "publicTransit": "Durgam Cheruvu Metro Station (Blue Line) is within 800m of the bridge entry.",
+    "monsoonRisks": "Generally clean drainage on the bridge deck, but water collection occurs at the Road 45 junction intersection."
+  },
+  {
+    "id": "mindspace-raidurg",
+    "name": "Mindspace Madhapur & Raidurg Terminal",
+    "area": "Cyberabad / IT Corridor",
+    "coordinates": { "lat": 17.4399, "lng": 78.3772 },
+    "chokePoints": [
+      "Mindspace roundabout (Inorbit entrance)",
+      "Raidurg Metro drop-off lane",
+      "Knowledge City underpass"
+    ],
+    "peakHours": "09:00 - 11:30 AM & 18:00 - 21:00 PM",
+    "trafficPatterns": "Major delivery and cab drop-off clustering at Raidurg terminal causes right-lane stalling. Underpass provides free flow towards Bio-Diversity.",
+    "alternateRoutes": [
+      "Use the Mindspace internal ring flyover if accessing buildings 12-20.",
+      "Take Knowledge City road connecting straight to T-Hub 2.0 without touching Inorbit junction."
+    ],
+    "publicTransit": "Raidurg Metro Station (Terminal of Blue Line) with direct skywalk into Raheja Mindspace.",
+    "monsoonRisks": "Low risk; modernized storm-water culverts around Knowledge City."
+  },
+  {
+    "id": "kondapur-junction",
+    "name": "Kondapur RTA & Botanical Garden Junction",
+    "area": "West Hyderabad",
+    "coordinates": { "lat": 17.4615, "lng": 78.3672 },
+    "chokePoints": [
+      "Botanical Garden signal",
+      "Kothaguda multi-level flyover merge",
+      "Hafeezpet road bottleneck"
+    ],
+    "peakHours": "09:00 - 11:00 AM & 18:30 - 20:30 PM",
+    "trafficPatterns": "Kothaguda flyover has significantly eased direct travel to Gachibowli, but surface-level U-turns create delays for Miyapur commuters.",
+    "alternateRoutes": [
+      "Take the multi-level flyover upper deck directly from Kothaguda towards Gachibowli, bypassing Botanical Garden signal completely.",
+      "Use Masjid Banda inner road to reach Financial District without touching Gachibowli junction."
+    ],
+    "publicTransit": "Shared autos and TSRTC 127K route to Koti; Miyapur Metro Station (Red Line) is 5 km north.",
+    "monsoonRisks": "Water pooling near Botanical Garden gate 2 during flash rains."
+  },
+  {
+    "id": "ameerpet-junction",
+    "name": "Ameerpet Interchange & Mythrivanam",
+    "area": "Central Hyderabad",
+    "coordinates": { "lat": 17.4375, "lng": 78.4482 },
+    "chokePoints": [
+      "Ameerpet Big Bazaar cross road",
+      "Mythrivanam coaching hub auto stand",
+      "Panjagutta road flyover entry"
+    ],
+    "peakHours": "08:30 - 11:30 AM & 17:00 - 21:00 PM",
+    "trafficPatterns": "Dense pedestrian crossing, auto rickshaws, and private buses create extreme street-level congestion. Flyover provides relief for through-traffic to SR Nagar.",
+    "alternateRoutes": [
+      "Use Balkampet bypass road to travel from Begumpet to Sanathnagar avoiding Ameerpet junction.",
+      "Use Panjagutta inner colonies (Dwarakapuri colony) to bypass Mythrivanam."
+    ],
+    "publicTransit": "Ameerpet Metro Interchange Station (Red Line & Blue Line crossover) provides the fastest transit alternative across the entire city.",
+    "monsoonRisks": "Severe waterlogging near Mythrivanam building and Saradhi Studios curve."
+  },
+  {
+    "id": "panjagutta-junction",
+    "name": "Punjagutta Junction & Nagarjuna Circle",
+    "area": "Central Hyderabad",
+    "coordinates": { "lat": 17.4265, "lng": 78.4518 },
+    "chokePoints": [
+      "Nagarjuna Circle flyover merge",
+      "Central Mall signal",
+      "Road No. 1 Banjara Hills entry"
+    ],
+    "peakHours": "09:30 - 12:00 PM & 17:30 - 21:00 PM",
+    "trafficPatterns": "Major crossroad connecting Secunderabad, Banjara Hills, Ameerpet, and Khairatabad. Nagarjuna Circle bottleneck frequently backs up onto the steel flyover.",
+    "alternateRoutes": [
+      "Take Somajiguda Raj Bhavan road to reach Khairatabad without touching Punjagutta circle.",
+      "Use Road No. 2 Banjara Hills via Muffakham Jah College to bypass Nagarjuna Circle."
+    ],
+    "publicTransit": "Punjagutta Metro Station (Red Line) directly above the junction.",
+    "monsoonRisks": "Waterlogging at Nagarjuna Circle under the flyover and near Hyderabad Central."
+  },
+  {
+    "id": "pvnr-expressway",
+    "name": "PVNR Elevated Expressway",
+    "area": "Mehdipatnam to Aramghar (Airport Route)",
+    "coordinates": { "lat": 17.3753, "lng": 78.4344 },
+    "chokePoints": [
+      "Mehdipatnam entry ramp (Pillar 1 to 20)",
+      "Aramghar exit descent (Pillar 310)",
+      "Attapur intermediate ramps"
+    ],
+    "peakHours": "07:00 - 10:00 AM & 17:00 - 21:00 PM",
+    "trafficPatterns": "11.6 km elevated corridor reserved for cars and light vehicles to RGI Airport. Free-flowing at 60-80 km/h, but accidents cause total standstill due to lack of hard shoulders.",
+    "alternateRoutes": [
+      "Use the Outer Ring Road (ORR) via Gachibowli/Nanakramguda to Airport: longer distance but 100 km/h speed limit and zero traffic signals.",
+      "If PVNR entry at Mehdipatnam is blocked, take the surface road via Rethibowli and join PVNR at Attapur ramp (Pillar 140)."
+    ],
+    "publicTransit": "Pushpak Airport Liner AC buses run every 15-30 minutes from Secunderabad and JNTU via Mehdipatnam.",
+    "monsoonRisks": "Surface roads under PVNR expressway (Attapur, Hyderguda) suffer severe waterlogging; elevated deck is clear."
+  },
+  {
+    "id": "orr-airport-stretch",
+    "name": "Outer Ring Road (ORR) - Gachibowli to Shamshabad Airport",
+    "area": "Outer Highway / Southern Corridor",
+    "coordinates": { "lat": 17.2403, "lng": 78.4294 },
+    "chokePoints": [
+      "Rajendranagar toll plaza exit",
+      "Shamshabad airport approach rotary",
+      "Nanakramguda toll gates during morning rush"
+    ],
+    "peakHours": "Generally smooth (24x7), mild toll queues during Sunday evenings",
+    "trafficPatterns": "8-lane access-controlled expressway with 120 km/h speed limit. Recommended route for all IT corridor commuters traveling to Rajiv Gandhi International Airport.",
+    "alternateRoutes": [
+      "For Shamshabad town or cargo village, exit at Exit 16 rather than main airport ramp."
+    ],
+    "publicTransit": "Proposed Airport Express Metro along ORR corridor; currently serviced by TSRTC Pushpak buses.",
+    "monsoonRisks": "Hydroplaning hazard on lane 1 and lane 2 during torrential rain; reduce speed to 80 km/h."
+  },
+  {
+    "id": "secunderabad-station",
+    "name": "Secunderabad Railway Station & Patny Circle",
+    "area": "Secunderabad",
+    "coordinates": { "lat": 17.4344, "lng": 78.5013 },
+    "chokePoints": [
+      "Station road auto stand & bus bay",
+      "Patny Center signal",
+      "Sangeet theater junction"
+    ],
+    "peakHours": "07:00 - 10:30 AM & 16:30 - 20:30 PM",
+    "trafficPatterns": "Extreme auto and bus congestion outside both Station Main (Platform 1) and Bhoiguda (Platform 10) gates.",
+    "alternateRoutes": [
+      "Use Bhoiguda side entry for hassle-free drop-off and parking compared to the congested platform 1 front gate.",
+      "Take the Clock Tower flyover to bypass Patny signal when heading towards Paradise."
+    ],
+    "publicTransit": "Secunderabad West Metro (Green Line) and Secunderabad East Metro (Blue Line) offer rapid transit.",
+    "monsoonRisks": "Waterlogging near Oliphant Bridge underpass; traffic frequently diverted."
+  },
+  {
+    "id": "tolichowki-mehdipatnam",
+    "name": "Tolichowki Flyover & Mehdipatnam Rythu Bazar",
+    "area": "South-West Hyderabad",
+    "coordinates": { "lat": 17.3995, "lng": 78.4237 },
+    "chokePoints": [
+      "Rethibowli junction",
+      "Mehdipatnam military gate bus terminus",
+      "Tolichowki flyover descent towards Shaikpet"
+    ],
+    "peakHours": "08:30 - 11:00 AM & 18:00 - 21:30 PM",
+    "trafficPatterns": "Main artery connecting Old City and Central Hyderabad to Hitec City via Shaikpet. Flyovers have eased transit, but Rethibowli ground junction remains tight.",
+    "alternateRoutes": [
+      "Use the newly opened Shaikpet flyover which bypasses 4 major signals all the way to Whisper Valley.",
+      "Take the Langar Houz - Bandlaguda bypass to enter ORR Exit 18."
+    ],
+    "publicTransit": "Heavy TSRTC bus hub at Mehdipatnam connecting all parts of the twin cities.",
+    "monsoonRisks": "Frequent waterlogging around Tolichowki Galaxy theater lane and Rethibowli junction."
+  },
+  {
+    "id": "joo-kphb-corridor",
+    "name": "KPHB Colony & JNTU Junction",
+    "area": "Kukatpally / North-West",
+    "coordinates": { "lat": 17.4934, "lng": 78.3998 },
+    "chokePoints": [
+      "JNTU Hi-tech city road entry",
+      "KPHB Phase 1 metro station road",
+      "Forum Sujana Mall signal"
+    ],
+    "peakHours": "08:30 - 11:30 AM & 18:00 - 21:30 PM",
+    "trafficPatterns": "Massive daily migration of IT employees from Kukatpally into Madhapur. The road from Forum Mall to Hitec City railway station is heavily congested during morning hours.",
+    "alternateRoutes": [
+      "Take the railway parallel road from KPHB 7th phase directly to Hitec MMTS station.",
+      "Use the Pragathi Nagar - Bachupally - ORR route to access Financial District directly on express lanes."
+    ],
+    "publicTransit": "KPHB Colony and JNTU Metro Stations (Red Line).",
+    "monsoonRisks": "Water stagnation near Malaysian Township signal and Forum Mall underpass."
+  }
+]
