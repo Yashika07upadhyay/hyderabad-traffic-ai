@@ -79,25 +79,3 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
-
-## ☁️ Deploy to Vercel (Free 1-Click)
-
-1. Push your repository to GitHub.
-2. Go to [Vercel](https://vercel.com/) and click **Add New Project**.
-3. Select your `hyderabad-traffic-ai` repository.
-4. Under **Environment Variables**, add:
-   * `GEMINI_API_KEY`
-   * `TOMTOM_API_KEY`
-5. Click **Deploy**. Your app is live in under 60 seconds!
-
----
-
-## 📄 Resume Bullet Points (LaTeX Ready)
-
-```latex
-\textbf{\href{https://hyderabad-traffic-ai.vercel.app/}{Hyderabad Transit AI: RAG \& Agentic Traffic Advisory System}} \\
-• Built an end-to-end GenAI advisory system using \textbf{Next.js, TypeScript, and Google Gemini}, combining localized RAG with live agent tool-calling for real-time traffic analysis. \\
-• Developed a vector retrieval pipeline utilizing \textbf{text-embedding-004} and cosine similarity over curated urban transit data to supply contextual detour strategies and bottleneck patterns. \\
-• Implemented an \textbf{autonomous tool-calling agent} integrating TomTom Traffic APIs to dynamically fetch live road speeds, delays, and congestion metrics across 25+ key transit corridors. \\
-• Deployed serverless API routes on \textbf{Vercel} with sub-1.2s response streaming, handling concurrency and fallback caching for API rate-limit resilience.
-```
