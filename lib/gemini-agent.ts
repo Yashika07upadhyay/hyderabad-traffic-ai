@@ -9,7 +9,6 @@ const nodes: TrafficNode[] = kbData as TrafficNode[];
 function matchJunction(locationQuery: string): TrafficNode {
   const queryLower = locationQuery.toLowerCase();
 
-  // Explicit corridor matching for common queries
   if (
     (queryLower.includes("amb") || queryLower.includes("sarath")) &&
     queryLower.includes("dlf")
@@ -60,47 +59,52 @@ export async function runTransitAgent(
 }> {
   const apiKey = process.env.GEMINI_API_KEY;
 
-  // Step 1: Identify Corridor and Query RAG Context
+  // Step 1: Parallelize Corridor matching & Live Sensor fetch (Parallel execution)
   const matched = matchJunction(userQuery);
-  const ragResults = await searchKnowledgeBase(userQuery, 2);
-  const ragSources = [matched.name, ...ragResults.map((r) => r.node.name).filter((n) => n !== matched.name)];
 
-  // Step 2: Fetch Live Traffic Telemetry from TomTom API
-  const liveTelemetry = await fetchLiveTraffic(
-    matched.coordinates.lat,
-    matched.coordinates.lng,
+  const [ragResults, liveTelemetry] = await Promise.all([
+    searchKnowledgeBase(userQuery, 2),
+    fetchLiveTraffic(
+      matched.coordinates.lat,
+      matched.coordinates.lng,
+      matched.name,
+      matched.id
+    ),
+  ]);
+
+  const ragSources = [
     matched.name,
-    matched.id
-  );
+    ...ragResults.map((r) => r.node.name).filter((n) => n !== matched.name),
+  ];
 
   const routes = matched.routeOptions || [];
   const primaryRoute = routes[0];
   const secondaryRoute = routes[1];
 
-  // Realistic time calculations based on live speed and distance
   const currentSpeed = Math.max(liveTelemetry.currentSpeedKmph, 15);
-  const calcTime = (km: number) => Math.max(5, Math.round((km / currentSpeed) * 60 + liveTelemetry.delayMinutes * 0.5));
+  const calcTime = (km: number) =>
+    Math.max(5, Math.round((km / currentSpeed) * 60 + liveTelemetry.delayMinutes * 0.5));
 
   const primaryTimeMins = primaryRoute ? calcTime(primaryRoute.distanceKm) : 10;
   const secondaryTimeMins = secondaryRoute ? calcTime(secondaryRoute.distanceKm) : null;
 
-  // Step 3: Direct fallback generator if Gemini API key is missing
+  // Step 2: Clean Instant Fallback Generator
   const generateFallbackResponse = (): string => {
     if (routes.length === 1 || !secondaryRoute) {
-      // Single direct route scenario (like AMB to DLF)
-      return `The drive from **${matched.name}** is a direct **~${primaryRoute.distanceKm} km** trip that takes approximately **~${primaryTimeMins} minutes** right now, with current road speeds averaging **${liveTelemetry.currentSpeedKmph} km/h** (${liveTelemetry.congestionStatus}).
+      return `The drive from **${matched.name}** is a quick **~${primaryRoute.distanceKm} km** trip taking approximately **~${primaryTimeMins} minutes** right now, with road speeds averaging **${liveTelemetry.currentSpeedKmph} km/h** (${liveTelemetry.congestionStatus}).
 
-To ensure the fastest commute, follow **${primaryRoute.name}**. Hop onto the elevated flyover as soon as you exit the mall area to completely skip the ground-level signal at Botanical Garden.
+To ensure the fastest commute, follow **${primaryRoute.name}**. Hop onto the elevated flyover to skip the ground-level signal at Botanical Garden.
 
 ---
 
 🎯 **Yashika's Suggestion:**
-Take **${primaryRoute.name}** to reach in **~${primaryTimeMins} mins**! Stay on the right lane of the flyover to bypass the Botanical Garden ground junction, but slow down near DLF gate where food stalls cause curb-side friction.`;
+Take **${primaryRoute.name}** to reach in **~${primaryTimeMins} mins**! Stay on the right lane of the flyover to breeze past Botanical Garden, and watch for food-truck congestion near the DLF gate.`;
     }
 
-    // Multi-route scenario (like Financial District to DLF or Airport)
-    const fasterRoute = primaryTimeMins <= (secondaryTimeMins || 99) ? primaryRoute : secondaryRoute;
-    const slowerRoute = primaryTimeMins <= (secondaryTimeMins || 99) ? secondaryRoute : primaryRoute;
+    const fasterRoute =
+      primaryTimeMins <= (secondaryTimeMins || 99) ? primaryRoute : secondaryRoute;
+    const slowerRoute =
+      primaryTimeMins <= (secondaryTimeMins || 99) ? secondaryRoute : primaryRoute;
     const fasterTime = Math.min(primaryTimeMins, secondaryTimeMins || 99);
     const slowerTime = Math.max(primaryTimeMins, secondaryTimeMins || 0);
     const timeSaved = slowerTime - fasterTime;
@@ -123,7 +127,9 @@ Take **${primaryRoute.name}** to reach in **~${primaryTimeMins} mins**! Stay on 
 ---
 
 🎯 **Yashika's Suggestion:**
-Take **${fasterRoute.name}** to reach in **~${fasterTime} mins**${timeSaved > 0 ? ` (saving **~${timeSaved} mins** over ${slowerRoute.name})` : ""}!`;
+Take **${fasterRoute.name}** to reach in **~${fasterTime} mins**${
+      timeSaved > 0 ? ` (saving **~${timeSaved} mins** over ${slowerRoute.name})` : ""
+    }!`;
   };
 
   if (!apiKey || apiKey.trim() === "" || apiKey === "your_gemini_api_key_here") {
@@ -134,10 +140,10 @@ Take **${fasterRoute.name}** to reach in **~${fasterTime} mins**${timeSaved > 0 
     };
   }
 
-  // Step 4: Live Generation via Gemini 3.6 Flash
+  // Step 3: Fast Generation via gemini-flash-lite-latest with a 4s timeout
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
 
     const prompt = `You are 'Hyderabad Transit AI', a real-time urban mobility specialist for Hyderabad commuters.
 
@@ -152,7 +158,7 @@ LIVE SENSOR DATA (TomTom Traffic API):
 ROUTE INTELLIGENCE:
 ${
   routes.length === 1
-    ? `- This is a single direct short stretch: "${primaryRoute.name}" (~${primaryRoute.distanceKm} km).
+    ? `- Single direct short stretch: "${primaryRoute.name}" (~${primaryRoute.distanceKm} km).
 - Real driving time at current speed: ~${primaryTimeMins} mins.
 - Key advice: Take the Kothaguda multi-level flyover to avoid Botanical Garden ground signal.`
     : routes
@@ -169,12 +175,18 @@ USER QUERY: "${userQuery}"
 
 INSTRUCTIONS:
 1. Give a crisp, highly realistic Hyderabad commuter advisory based on the live TomTom speed (${liveTelemetry.currentSpeedKmph} km/h).
-2. If the query is about a short direct stretch (like AMB to DLF), state clearly that it is a quick ~${primaryRoute.distanceKm} km drive taking only ~${primaryTimeMins} minutes right now. Do NOT invent unnecessary detours when there is only one obvious road.
+2. If the query is about a short direct stretch (like AMB to DLF), state clearly that it is a quick ~${primaryRoute.distanceKm} km drive taking only ~${primaryTimeMins} minutes right now.
 3. If there are multiple viable routes (like Financial District to DLF), compare the two routes with distance and estimated minutes.
 4. Conclude with:
 🎯 **Yashika's Suggestion**: [Your direct, actionable recommendation with exact route name, estimated minutes, and lane/flyover tip]`;
 
-    const result = await model.generateContent(prompt);
+    // Strict 4-second timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("LLM generation timeout")), 4000)
+    );
+
+    const generatePromise = model.generateContent(prompt);
+    const result = await Promise.race([generatePromise, timeoutPromise]);
     const responseText = result.response.text();
 
     return {
@@ -183,7 +195,7 @@ INSTRUCTIONS:
       liveTelemetry,
     };
   } catch (err) {
-    console.error("Gemini API error in transit agent, using grounded fallback:", err);
+    console.warn("Using instant local fallback generator due to latency or timeout:", err);
     return {
       response: generateFallbackResponse(),
       ragSources,
