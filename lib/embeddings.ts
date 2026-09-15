@@ -31,7 +31,7 @@ export async function getEmbedding(text: string): Promise<number[] | null> {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const result = await model.embedContent(text);
     return result.embedding.values;
   } catch (err) {
@@ -41,16 +41,18 @@ export async function getEmbedding(text: string): Promise<number[] | null> {
 }
 
 function nodeToSearchableText(node: TrafficNode): string {
+  const routesStr = node.routeOptions
+    ? node.routeOptions.map((r) => `${r.name}: ${r.description} (~${r.distanceKm} km, ~${r.baseTimeMins} mins)`).join("; ")
+    : "";
+
   return `${node.name} (${node.area})
 Choke points: ${node.chokePoints.join(", ")}
 Peak hours: ${node.peakHours}
 Traffic patterns: ${node.trafficPatterns}
-Alternate routes: ${node.alternateRoutes.join("; ")}
-Public transit: ${node.publicTransit}
-Monsoon risks: ${node.monsoonRisks}`;
+Route options: ${routesStr}`;
 }
 
-// Lightweight lexical score if embeddings are unavailable or offline
+// Lightweight lexical score fallback
 function calculateLexicalScore(query: string, text: string): number {
   const queryTokens = query.toLowerCase().split(/\W+/).filter(Boolean);
   const textLower = text.toLowerCase();
@@ -72,7 +74,6 @@ export async function searchKnowledgeBase(
   const queryEmbedding = await getEmbedding(query);
 
   if (queryEmbedding) {
-    // If embeddings work, embed knowledge base if not already cached
     if (!cachedNodeEmbeddings) {
       cachedNodeEmbeddings = [];
       for (const node of nodes) {

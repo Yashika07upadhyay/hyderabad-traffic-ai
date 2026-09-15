@@ -7,11 +7,11 @@ interface Props {
 }
 
 const SUGGESTIONS = [
-  "Cyber Towers to Mindspace right now: Flyover or Durgam Cheruvu cable bridge?",
-  "How is traffic from Gachibowli to RGI Airport? Should I take PVNR Expressway or ORR?",
-  "Is Ameerpet junction jammed right now? What are the best detours?",
-  "Heading from Kondapur to Financial District during peak rain, any waterlogging?",
-  "Check live traffic status and speed on Durgam Cheruvu Bridge.",
+  "AMB Cinemas to DLF Cyber City: Which route is faster right now?",
+  "Financial District to DLF: Wipro Circle Road vs ORR?",
+  "Cyber Towers to Mindspace: Flyover or Durgam Cheruvu cable bridge?",
+  "Gachibowli to RGI Airport: PVNR Expressway vs ORR?",
+  "Live traffic speed and delays around Sarath City Capital Mall",
 ];
 
 export const PromptSuggestions: React.FC<Props> = ({ onSelectPrompt, disabled }) => {

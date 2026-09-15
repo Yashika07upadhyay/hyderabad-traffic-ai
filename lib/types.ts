@@ -1,3 +1,10 @@
+export interface RouteOption {
+  name: string;
+  distanceKm: number;
+  baseTimeMins: number;
+  description: string;
+}
+
 export interface TrafficNode {
   id: string;
   name: string;
@@ -9,9 +16,7 @@ export interface TrafficNode {
   chokePoints: string[];
   peakHours: string;
   trafficPatterns: string;
-  alternateRoutes: string[];
-  publicTransit: string;
-  monsoonRisks: string;
+  routeOptions?: RouteOption[];
 }
 
 export interface LiveTrafficTelemetry {
