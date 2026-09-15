@@ -14,6 +14,7 @@ export interface TrafficNode {
     lng: number;
   };
   chokePoints: string[];
+  landmarks?: string[];
   peakHours: string;
   trafficPatterns: string;
   routeOptions?: RouteOption[];

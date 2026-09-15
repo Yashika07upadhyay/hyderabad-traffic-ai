@@ -2,21 +2,62 @@
   {
     "id": "amb-to-dlf",
     "name": "AMB Cinemas to DLF Cyber City Corridor",
-    "area": "Kondapur to Gachibowli",
+    "area": "Kondapur to Gachibowli (West Corridor)",
     "coordinates": { "lat": 17.4578, "lng": 78.3639 },
+    "landmarks": [
+      "Sarath City Capital Mall / AMB Cinemas",
+      "Kothaguda Multi-Level Flyover",
+      "Botanical Garden Junction",
+      "Radisson Hotel Crossroad",
+      "DLF Cyber City Gate 1 & Food Street"
+    ],
     "chokePoints": [
-      "Sarath City Mall parking entry & exit queue",
-      "Botanical Garden ground-level junction (under flyover)",
-      "DLF Street Food curb parking & entrance gate"
+      "Sarath City Mall exit & ground-level U-turn",
+      "Botanical Garden ground junction (bypassed via elevated flyover)",
+      "DLF Street Food curb-side vehicle drop-offs"
     ],
     "peakHours": "17:30 - 21:30 (Daily)",
-    "trafficPatterns": "Direct short 3.2 km straight corridor down Gachibowli-Miyapur Road. The multi-level Kothaguda flyover provides a direct non-stop elevated bypass over the Botanical Garden signal.",
+    "trafficPatterns": "Direct 3.2 km stretch straight down Gachibowli-Miyapur Road. The multi-level Kothaguda flyover offers a continuous elevated bypass over the Botanical Garden signal straight towards DLF.",
     "routeOptions": [
       {
         "name": "Gachibowli-Miyapur Road via Kothaguda Flyover",
         "distanceKm": 3.2,
         "baseTimeMins": 8,
-        "description": "The only direct, fast route. Takes the Kothaguda elevated flyover directly past Botanical Garden straight into DLF Cyber City."
+        "description": "Direct arterial corridor via elevated flyover directly into DLF Cyber City."
+      }
+    ]
+  },
+  {
+    "id": "cyber-to-mindspace",
+    "name": "Cyber Towers to Mindspace & Raidurg Corridor",
+    "area": "Madhapur / Cyberabad IT Corridor",
+    "coordinates": { "lat": 17.4504, "lng": 78.3808 },
+    "landmarks": [
+      "Cyber Towers Rotary (Madhapur)",
+      "Cyber Gateway & Shilparamam",
+      "Inorbit Mall Roundabout",
+      "Raidurg Metro Station & Skywalk",
+      "Raheja Mindspace IT Park"
+    ],
+    "chokePoints": [
+      "Cyber Towers rotary intersection",
+      "Inorbit Mall inward traffic merge",
+      "Raidurg Metro drop-off curb"
+    ],
+    "peakHours": "09:00 - 11:30 AM & 17:30 - 21:00 PM (Weekdays)",
+    "trafficPatterns": "Direct Madhapur tech artery. Two options: main arterial road via Inorbit vs Durgam Cheruvu / Knowledge City slip road.",
+    "routeOptions": [
+      {
+        "name": "Main Arterial Road via Inorbit Mall",
+        "distanceKm": 2.6,
+        "baseTimeMins": 7,
+        "description": "Shortest 2.6 km direct road via Shilparamam and Inorbit roundabout; heavy signal delays during rush hour."
+      },
+      {
+        "name": "Knowledge City & Durgam Cheruvu Bypass",
+        "distanceKm": 3.4,
+        "baseTimeMins": 8,
+        "description": "Takes the slip road before Hitec flyover past T-Hub into Mindspace back gate, avoiding Inorbit signal."
       }
     ]
   },
@@ -25,79 +66,91 @@
     "name": "Financial District to DLF Cyber City Corridor",
     "area": "Financial District to Gachibowli",
     "coordinates": { "lat": 17.4156, "lng": 78.3427 },
+    "landmarks": [
+      "WaveRock & ICICI Regional Hub (Nanakramguda)",
+      "Wipro Circle & Microsoft Campus",
+      "Indian School of Business (ISB) Road",
+      "IIIT Hyderabad Junction Signal",
+      "DLF Cyber City (Gachibowli)"
+    ],
     "chokePoints": [
       "Wipro Circle rotary",
-      "IIIT Hyderabad junction signal",
+      "IIIT Hyderabad signal",
       "Gachibowli stadium crossroad"
     ],
     "peakHours": "08:30 - 11:00 AM & 17:00 - 20:30 PM",
-    "trafficPatterns": "Two distinct viable driving choices: Wipro Circle Road (shorter, direct arterial) vs ORR Service Road (longer distance, avoids Wipro Circle ground signal).",
+    "trafficPatterns": "Major commuter artery connecting Nanakramguda to Gachibowli. Wipro Circle Road is the direct short route; ORR Service Road is the bypass.",
     "routeOptions": [
       {
         "name": "Wipro Circle Road",
         "distanceKm": 4.5,
-        "baseTimeMins": 18,
-        "description": "Direct arterial link from Financial District through ISB road and IIIT Hyderabad junction."
+        "baseTimeMins": 14,
+        "description": "Direct arterial link from Financial District via ISB road and IIIT Hyderabad junction."
       },
       {
         "name": "ORR Service Road / Nanakramguda Exit",
         "distanceKm": 6.2,
-        "baseTimeMins": 25,
-        "description": "Longer distance via ORR service lane; bypasses internal circles but slows down near Gachibowli stadium."
-      }
-    ]
-  },
-  {
-    "id": "cyber-to-mindspace",
-    "name": "Cyber Towers to Mindspace & Raidurg Corridor",
-    "area": "Cyberabad / IT Corridor",
-    "coordinates": { "lat": 17.4504, "lng": 78.3808 },
-    "chokePoints": [
-      "Cyber Towers rotary intersection",
-      "Inorbit Mall roundabout",
-      "Raidurg Metro drop-off lane"
-    ],
-    "peakHours": "09:00 - 11:30 AM & 17:30 - 21:00 PM (Weekdays)",
-    "trafficPatterns": "Heavy tech park traffic. Direct Hitec City flyover vs Durgam Cheruvu cable bridge bypass.",
-    "routeOptions": [
-      {
-        "name": "Durgam Cheruvu Cable Bridge Bypass",
-        "distanceKm": 3.8,
-        "baseTimeMins": 9,
-        "description": "Skips Cyber Towers signal directly into Knowledge City and Mindspace."
-      },
-      {
-        "name": "Hitec City Main Flyover Road",
-        "distanceKm": 4.2,
-        "baseTimeMins": 16,
-        "description": "Direct arterial road, but heavy bottlenecks at Inorbit signal."
+        "baseTimeMins": 22,
+        "description": "Longer distance via ORR service lane; bypasses internal circles but merges into Gachibowli stadium queues."
       }
     ]
   },
   {
     "id": "gachibowli-to-airport",
-    "name": "Gachibowli to RGI Airport (Shamshabad)",
-    "area": "Gachibowli to Airport",
+    "name": "Gachibowli to RGI Airport Corridor",
+    "area": "Gachibowli to Shamshabad Airport",
     "coordinates": { "lat": 17.2403, "lng": 78.4294 },
-    "chokePoints": [
-      "Nanakramguda toll plaza",
-      "Aramghar junction (PVNR exit)",
-      "Shamshabad airport rotary"
+    "landmarks": [
+      "Gachibowli ORR Junction (Exit 19)",
+      "Nanakramguda Toll Plaza",
+      "Rajendranagar Exit",
+      "Shamshabad Rotary",
+      "Rajiv Gandhi International Airport (RGIA)"
     ],
-    "peakHours": "Evening toll queues on Sundays; free-flowing on ORR weekdays",
-    "trafficPatterns": "Two primary airport express options: Outer Ring Road (100-120 km/h signal-free expressway) vs PVNR Elevated Expressway (via Mehdipatnam).",
+    "chokePoints": [
+      "Nanakramguda toll gates during morning rush",
+      "Shamshabad airport approach rotary"
+    ],
+    "peakHours": "Sunday evening toll queues; smooth on weekdays",
+    "trafficPatterns": "The 8-lane Outer Ring Road (ORR) is the primary access-controlled expressway (100 km/h) to RGI Airport.",
     "routeOptions": [
       {
         "name": "Outer Ring Road (ORR Expressway)",
-        "distanceKm": 33.5,
-        "baseTimeMins": 28,
-        "description": "Recommended from Gachibowli/Financial District. 100 km/h access-controlled expressway with zero traffic lights."
+        "distanceKm": 31.5,
+        "baseTimeMins": 25,
+        "description": "100 km/h access-controlled expressway with zero traffic signals directly to RGIA departures."
       },
       {
         "name": "PVNR Elevated Expressway via Mehdipatnam",
-        "distanceKm": 36.0,
+        "distanceKm": 35.0,
         "baseTimeMins": 42,
-        "description": "Elevated corridor for Central Hyderabad travelers, but requires negotiating Gachibowli ground signals first."
+        "description": "Alternative for Central Hyderabad, but from Gachibowli requires traveling through city ground traffic first."
+      }
+    ]
+  },
+  {
+    "id": "durgam-cheruvu-bridge",
+    "name": "Durgam Cheruvu Cable Bridge to Jubilee Hills Corridor",
+    "area": "Madhapur to Jubilee Hills",
+    "coordinates": { "lat": 17.4334, "lng": 78.3888 },
+    "landmarks": [
+      "Inorbit Mall / ITC Kohenur (Madhapur)",
+      "Durgam Cheruvu Cable-Stayed Bridge Deck",
+      "Road No. 45 Jubilee Hills Signal",
+      "Jubilee Hills Road No. 36 Junction"
+    ],
+    "chokePoints": [
+      "Road No. 45 Jubilee Hills ground signal",
+      "ITC Kohenur merge lane"
+    ],
+    "peakHours": "10:00 - 12:00 PM & 18:00 - 21:30 PM",
+    "trafficPatterns": "Iconic cable-stayed bridge spanning Durgam Cheruvu lake, cutting cross-city travel between Madhapur and Jubilee Hills.",
+    "routeOptions": [
+      {
+        "name": "Durgam Cheruvu Cable Bridge",
+        "distanceKm": 2.2,
+        "baseTimeMins": 6,
+        "description": "Elevated lake crossing directly connecting Inorbit/ITC Kohenur to Road 45 Jubilee Hills."
       }
     ]
   }

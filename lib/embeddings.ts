@@ -84,14 +84,19 @@ export async function searchKnowledgeBase(
       return { node, score };
     });
 
-    return scored.sort((a, b) => b.score - a.score).slice(0, topK);
+    return scored
+      .filter((item) => item.score > 0.72)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topK);
   }
 
   // 2. Ultra-fast lexical fallback (<0.1ms)
-  const lexicalScored = nodes.map((node) => {
-    const score = calculateLexicalScore(query, node);
-    return { node, score };
-  });
+  const lexicalScored = nodes
+    .map((node) => {
+      const score = calculateLexicalScore(query, node);
+      return { node, score };
+    })
+    .filter((item) => item.score > 0);
 
   return lexicalScored.sort((a, b) => b.score - a.score).slice(0, topK);
 }
