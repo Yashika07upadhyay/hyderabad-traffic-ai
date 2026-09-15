@@ -123,6 +123,25 @@ export default function Home() {
   // Quick formatter for simple markdown rendering
   const renderFormattedContent = (content: string) => {
     return content.split("\n").map((line, idx) => {
+      // High-visibility Decision Card for Yashika's Suggestion
+      if (line.includes("🎯") || line.toLowerCase().includes("yashika's suggestion")) {
+        const cleanText = line.replace(/🎯|\*\*Yashika's Suggestion:\*\*|Yashika's Suggestion:/gi, "").trim();
+        return (
+          <div
+            key={idx}
+            className="my-3 rounded-xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-amber-500/10 p-3.5 shadow-sm"
+          >
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              <span>Yashika&apos;s Commute Recommendation</span>
+            </div>
+            <p className="mt-1.5 text-sm font-semibold leading-relaxed text-slate-900 dark:text-slate-100">
+              {parseBold(cleanText)}
+            </p>
+          </div>
+        );
+      }
+
       if (line.startsWith("### ")) {
         return (
           <h3 key={idx} className="mt-3 mb-1 text-base font-bold text-indigo-600 dark:text-indigo-400">
