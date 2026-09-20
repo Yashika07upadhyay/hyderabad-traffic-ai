@@ -58,56 +58,68 @@ export default function Home() {
     scrollToBottom();
   }, [messages, loading]);
 
-  const handleSubmit = async (textToSend?: string) => {
+  // Debounce ref: prevents double-submit on rapid clicks or Enter key spam
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Rate-limit: tracks last submit timestamp — enforces min 3s gap between requests
+  const lastSubmitRef = useRef<number>(0);
+
+  const handleSubmit = (textToSend?: string) => {
     const query = (textToSend || input).trim();
     if (!query || loading) return;
 
-    setInput("");
-    const userMsg: ChatMessage = { role: "user", content: query };
-    setMessages((prev) => [...prev, userMsg]);
-    setLoading(true);
+    // Rate-limit guard: silently block if last request was < 3 seconds ago
+    const now = Date.now();
+    if (now - lastSubmitRef.current < 3000) return;
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: query,
-          history: messages.map((m) => ({ role: m.role, content: m.content })),
-        }),
-      });
+    // Debounce: cancel any pending fire and wait 300ms before executing
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      lastSubmitRef.current = Date.now();
+      setInput("");
+      const userMsg: ChatMessage = { role: "user", content: query };
+      setMessages((prev) => [...prev, userMsg]);
+      setLoading(true);
 
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: query,
+            history: messages.map((m) => ({ role: m.role, content: m.content })),
+          }),
+        });
+
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+        const data: {
+          response: string;
+          ragSources: string[];
+          liveTelemetry: LiveTrafficTelemetry | null;
+        } = await res.json();
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: data.response,
+            telemetry: data.liveTelemetry,
+            ragSources: data.ragSources,
+          },
+        ]);
+      } catch (err: any) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content:
+              "⚠️ **Connection Issue:** Unable to complete traffic query. Please check your network connection or verify API credentials.",
+          },
+        ]);
+      } finally {
+        setLoading(false);
       }
-
-      const data: {
-        response: string;
-        ragSources: string[];
-        liveTelemetry: LiveTrafficTelemetry | null;
-      } = await res.json();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.response,
-          telemetry: data.liveTelemetry,
-          ragSources: data.ragSources,
-        },
-      ]);
-    } catch (err: any) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "⚠️ **Connection Issue:** Unable to complete traffic query. Please check your network connection or verify API credentials.",
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    }, 300);
   };
 
   const handleClear = () => {
