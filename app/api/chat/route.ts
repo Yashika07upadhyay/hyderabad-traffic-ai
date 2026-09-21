@@ -1,53 +1,109 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runTransitAgent } from "@/lib/gemini-agent";
 
-// Hyderabad traffic-relevant keyword whitelist
-const TRAFFIC_KEYWORDS = [
-  // Areas / landmarks
-  "amb", "dlf", "cyber", "towers", "mindspace", "raidurg", "gachibowli",
-  "financial", "district", "kondapur", "madhapur", "hitec", "htech",
-  "ameerpet", "punjagutta", "pvnr", "orr", "airport", "shamshabad",
-  "jubilee", "hills", "durgam", "cheruvu", "kothaguda", "botanical",
-  "inorbit", "sarath", "wipro", "iiit", "isb", "nanakramguda", "kphb",
-  "jntu", "miyapur", "secunderabad", "begumpet", "mehdipatnam",
-  "tolichowki", "shaikpet", "banjara", "raidurg", "kukatpally",
-  // Transit / traffic intent words
-  "traffic", "route", "road", "drive", "commute", "travel", "reach",
-  "go", "from", "to", "via", "speed", "slow", "jam", "congestion",
-  "flyover", "bypass", "signal", "junction", "highway", "expressway",
-  "fast", "quick", "how long", "how much time", "best way", "which way",
-  "live", "current", "now", "today", "tonight", "morning", "evening",
-  "peak", "rush", "delay", "mins", "minutes", "km", "kilometre",
-  "waterlog", "rain", "flood", "metro", "cab", "auto", "uber", "ola",
+// Explicit non-transit / jailbreak patterns (tech, coding, trivia, general chat)
+const OUT_OF_DOMAIN_PATTERNS = [
+  // Programming & tech
+  /\b(node|nodejs|javascript|js|typescript|ts|python|java|c\+\+|golang|rust|html|css|react|nextjs)\b/i,
+  /\b(promise|promises|async|await|callback|function|array|object|class|method|loop|variable)\b/i,
+  /\b(code|coding|program|programming|debug|debugger|compiler|syntax|algorithm|github|git|api key)\b/i,
+  /\b(sql|database|postgres|mongodb|redis|prisma|orm|query|backend|frontend|fullstack)\b/i,
+  // General trivia & creative writing
+  /\b(recipe|cook|bake|movie|song|lyrics|poem|story|joke|riddle|essay|homework)\b/i,
+  /\b(president|prime minister|capital of|who invented|history of|math|solve|calculate)\b/i,
+  /\b(weather|temperature|forecast|rain today in delhi|mumbai|bangalore)\b/i,
+  // Jailbreak attempts
+  /ignore (all |previous |prior )?instructions/i,
+  /you are now (an? |a general )/i,
+  /pretend (you are|to be)/i,
 ];
 
-// Minimum number of matching keywords to accept the query
-const MIN_KEYWORD_MATCHES = 1;
+// Specific Hyderabad geographic landmarks and corridors
+const HYD_LOCATIONS = [
+  "amb", "sarath city", "dlf", "cyber towers", "cyber gateway", "mindspace", "raidurg",
+  "gachibowli", "financial district", "nanakramguda", "wipro circle", "kothaguda",
+  "botanical garden", "durgam cheruvu", "cable bridge", "jubilee hills", "road 45",
+  "road 36", "hitec", "hitech", "madhapur", "kondapur", "pvnr", "orr", "outer ring road",
+  "airport", "shamshabad", "rgia", "ameerpet", "punjagutta", "kphb", "jntu", "miyapur",
+  "secunderabad", "begumpet", "mehdipatnam", "tolichowki", "shaikpet", "banjara hills",
+  "kukatpally", "inorbit", "knowledge city", "t-hub", "shilparamam", "attapur"
+];
 
-function isTrafficRelatedQuery(query: string): boolean {
-  const q = query.toLowerCase();
+// Specific transit-intent words (must indicate movement, road conditions, or transit)
+const TRANSIT_INTENT_WORDS = [
+  "traffic", "commute", "congestion", "jam", "choke point", "flyover", "underpass",
+  "route", "road", "drive", "travel time", "delay", "waterlog", "waterlogging",
+  "toll", "signal", "bottleneck", "detour", "bypass", "expressway", "speed limit",
+  "reach", "how to go", "which way", "how long will it take", "alternate route"
+];
 
-  // Reject very short or purely social queries
-  if (q.length < 5) return false;
+function isTrafficRelatedQuery(
+  query: string,
+  history: { role: string; content: string }[] = []
+): { isValid: boolean; reason?: string } {
+  const q = query.trim().toLowerCase();
 
-  // Reject explicit social/greeting patterns
-  const socialPatterns = [
-    /^(hi|hello|hey|hii+|helo|hai)[^a-z]*$/i,
-    /^how are you/i,
-    /^good (morning|afternoon|evening|night)/i,
-    /^what('s| is) up/i,
-    /^(thanks|thank you|ok|okay|sure|great|nice|cool|awesome|wow)[^a-z]*$/i,
-    /^who are you/i,
-    /^what (can|do) you do/i,
-    /^(bye|goodbye|see you)[^a-z]*$/i,
-    /^(yes|no|maybe|ok+)[^a-z]*$/i,
-    /^\?+$/,
-  ];
-  if (socialPatterns.some((p) => p.test(q.trim()))) return false;
+  // 1. Length bounds
+  if (q.length < 3) {
+    return { isValid: false, reason: "Please enter a specific Hyderabad route or junction query." };
+  }
+  if (q.length > 400) {
+    return { isValid: false, reason: "Your query is too long. Please keep it under 400 characters." };
+  }
 
-  // Accept if it contains at least one traffic-related keyword
-  const matchCount = TRAFFIC_KEYWORDS.filter((kw) => q.includes(kw)).length;
-  return matchCount >= MIN_KEYWORD_MATCHES;
+  // 2. Pure greetings & pleasantries
+  const socialOnly = /^(hi|hello|hey|hii+|helo|hai|good morning|good evening|how are you|what's up|thanks|thank you|ok|okay|bye|cool|great)[\s!.]*$/i;
+  if (socialOnly.test(q)) {
+    return {
+      isValid: false,
+      reason:
+        "Namaste! I am your Hyderabad Transit AI specialist. Ask me about live commute routes, flyover traffic, or travel times across Hyderabad — e.g. *'AMB to DLF'* or *'Cyber Towers to Mindspace right now.'*",
+    };
+  }
+
+  // 3. Strict out-of-domain check (programming, trivia, jailbreak attempts)
+  for (const pattern of OUT_OF_DOMAIN_PATTERNS) {
+    if (pattern.test(q)) {
+      return {
+        isValid: false,
+        reason:
+          "I specialize exclusively in **Hyderabad transit routing, live road traffic, and commute advisory**. I cannot assist with programming, general technical queries, or non-transit topics.\n\nPlease ask a Hyderabad route query, for example:\n* *'AMB Cinemas to DLF Cyber City right now'* \n* *'Cyber Towers to Mindspace: flyover or bypass?'*\n* *'Financial District to DLF: Wipro Circle vs ORR?'*",
+      };
+    }
+  }
+
+  // 4. Check for known Hyderabad landmarks
+  const hasHydLocation = HYD_LOCATIONS.some((loc) => q.includes(loc));
+
+  // 5. Check for transit intent terms
+  const hasTransitIntent = TRANSIT_INTENT_WORDS.some((word) => q.includes(word));
+
+  // 6. Direct route pattern check: e.g. "from [x] to [y]" or "[x] to [y]"
+  const hasRoutePattern = /\b(from\s+[a-z0-9\s]+to\s+[a-z0-9\s]+|[a-z0-9\s]+\s+to\s+[a-z0-9\s]+)\b/i.test(q);
+
+  // 7. Contextual follow-up check: If user asks a short follow-up in an ongoing conversation
+  const isConversationalFollowUp =
+    history.length > 0 &&
+    (q.includes("sunday") ||
+      q.includes("rain") ||
+      q.includes("flyover") ||
+      q.includes("time") ||
+      q.includes("why") ||
+      q.includes("alternate") ||
+      q.includes("how long") ||
+      q.includes("faster") ||
+      q.includes("metro"));
+
+  if (hasHydLocation || (hasTransitIntent && (hasRoutePattern || isConversationalFollowUp)) || isConversationalFollowUp) {
+    return { isValid: true };
+  }
+
+  // If none matched, reject with clear guidance
+  return {
+    isValid: false,
+    reason:
+      "I am a specialized Hyderabad Transit AI. I can only assist with road conditions, choke points, and route optimization between Hyderabad areas.\n\nTry asking:\n* *'AMB to DLF Cyber City'* \n* *'Cyber Towers to Mindspace live traffic'* \n* *'Financial District to DLF: which route is faster?'*",
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -55,7 +111,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { message, history } = body;
 
-    // --- Basic validation ---
     if (!message || typeof message !== "string") {
       return NextResponse.json(
         { error: "Query message is required." },
@@ -64,36 +119,18 @@ export async function POST(req: NextRequest) {
     }
 
     const trimmed = message.trim();
+    const validation = isTrafficRelatedQuery(trimmed, history || []);
 
-    // --- Length guard: reject too-short or too-long inputs ---
-    if (trimmed.length < 5) {
+    // Intercept out-of-domain, non-traffic, or jailbreak queries immediately
+    if (!validation.isValid) {
       return NextResponse.json({
-        response:
-          "Please type a Hyderabad traffic or route query — for example: *'AMB to DLF'* or *'How is traffic at Cyber Towers right now?'*",
+        response: validation.reason,
         ragSources: [],
         liveTelemetry: null,
       });
     }
 
-    if (trimmed.length > 400) {
-      return NextResponse.json({
-        response:
-          "Your query is too long. Please keep it under 400 characters and focus on a specific route or junction in Hyderabad.",
-        ragSources: [],
-        liveTelemetry: null,
-      });
-    }
-
-    // --- Domain guard: reject non-traffic queries ---
-    if (!isTrafficRelatedQuery(trimmed)) {
-      return NextResponse.json({
-        response:
-          "I'm a Hyderabad traffic specialist — I can only help with road conditions, commute routes, junction status, and travel time estimates. Try asking something like:\n\n* *'Cyber Towers to Mindspace right now?'*\n* *'How is traffic from AMB to DLF?'*\n* *'Is the PVNR Expressway clear at this time?'*",
-        ragSources: [],
-        liveTelemetry: null,
-      });
-    }
-
+    // Pass valid query and conversation history to the agent
     const result = await runTransitAgent(trimmed, history || []);
     return NextResponse.json(result);
   } catch (error: any) {
