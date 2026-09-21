@@ -1,108 +1,153 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runTransitAgent } from "@/lib/gemini-agent";
 
-// Explicit non-transit / jailbreak patterns (tech, coding, trivia, general chat)
-const OUT_OF_DOMAIN_PATTERNS = [
-  // Programming & tech
-  /\b(node|nodejs|javascript|js|typescript|ts|python|java|c\+\+|golang|rust|html|css|react|nextjs)\b/i,
-  /\b(promise|promises|async|await|callback|function|array|object|class|method|loop|variable)\b/i,
-  /\b(code|coding|program|programming|debug|debugger|compiler|syntax|algorithm|github|git|api key)\b/i,
-  /\b(sql|database|postgres|mongodb|redis|prisma|orm|query|backend|frontend|fullstack)\b/i,
-  // General trivia & creative writing
-  /\b(recipe|cook|bake|movie|song|lyrics|poem|story|joke|riddle|essay|homework)\b/i,
-  /\b(president|prime minister|capital of|who invented|history of|math|solve|calculate)\b/i,
-  /\b(weather|temperature|forecast|rain today in delhi|mumbai|bangalore)\b/i,
-  // Jailbreak attempts
-  /ignore (all |previous |prior )?instructions/i,
-  /you are now (an? |a general )/i,
-  /pretend (you are|to be)/i,
+// The 5 active corridors currently maintained in our database
+const SUPPORTED_CORRIDORS = [
+  {
+    id: "amb-to-dlf",
+    name: "AMB Cinemas to DLF Cyber City (Kondapur / Gachibowli)",
+    places: ["amb", "sarath city", "dlf", "kothaguda", "botanical"],
+  },
+  {
+    id: "cyber-to-mindspace",
+    name: "Cyber Towers to Mindspace & Raidurg (Madhapur / HITEC City)",
+    places: ["cyber towers", "cyber gateway", "mindspace", "raidurg", "hitec", "madhapur", "shilparamam"],
+  },
+  {
+    id: "financial-to-dlf",
+    name: "Financial District to DLF Cyber City (Wipro Circle / Gachibowli)",
+    places: ["financial district", "waverock", "wipro circle", "nanakramguda", "isb"],
+  },
+  {
+    id: "gachibowli-to-airport",
+    name: "Gachibowli to RGI Airport (ORR Expressway)",
+    places: ["airport", "shamshabad", "rgia", "orr", "outer ring road", "pvnr"],
+  },
+  {
+    id: "durgam-cheruvu-bridge",
+    name: "Durgam Cheruvu Cable Bridge to Jubilee Hills",
+    places: ["durgam cheruvu", "cable bridge", "jubilee hills", "road 45", "road 36"],
+  },
 ];
 
-// Specific Hyderabad geographic landmarks and corridors
-const HYD_LOCATIONS = [
-  "amb", "sarath city", "dlf", "cyber towers", "cyber gateway", "mindspace", "raidurg",
-  "gachibowli", "financial district", "nanakramguda", "wipro circle", "kothaguda",
-  "botanical garden", "durgam cheruvu", "cable bridge", "jubilee hills", "road 45",
-  "road 36", "hitec", "hitech", "madhapur", "kondapur", "pvnr", "orr", "outer ring road",
-  "airport", "shamshabad", "rgia", "ameerpet", "punjagutta", "kphb", "jntu", "miyapur",
-  "secunderabad", "begumpet", "mehdipatnam", "tolichowki", "shaikpet", "banjara hills",
-  "kukatpally", "inorbit", "knowledge city", "t-hub", "shilparamam", "attapur"
+// Major Hyderabad areas that exist geographically but are NOT currently in our 5-corridor sensor mesh
+const UNMONITORED_HYD_AREAS = [
+  "secunderabad", "begumpet", "ameerpet", "punjagutta", "kphb", "jntu", "miyapur",
+  "mehdipatnam", "tolichowki", "shaikpet", "banjara hills", "kukatpally", "charminar",
+  "uppal", "lb nagar", "dilsukhnagar", "tarnaka", "malakpet", "abids", "koti", "alwal",
+  "kompally", "ecil", "malkajgiri", "old city", "nampally", "khairatabad", "paradise"
 ];
 
-// Specific transit-intent words (must indicate movement, road conditions, or transit)
-const TRANSIT_INTENT_WORDS = [
-  "traffic", "commute", "congestion", "jam", "choke point", "flyover", "underpass",
-  "route", "road", "drive", "travel time", "delay", "waterlog", "waterlogging",
-  "toll", "signal", "bottleneck", "detour", "bypass", "expressway", "speed limit",
-  "reach", "how to go", "which way", "how long will it take", "alternate route"
+// Non-traffic topics (tourism, food, tech, general trivia, jailbreaks)
+const NON_TRAFFIC_INTENTS = [
+  "famous spot", "tourist spot", "food", "restaurant", "places to visit", "place to visit",
+  "eating", "biryani", "timing", "ticket", "movie", "show", "job", "hiring", "company",
+  "companies", "shopping", "store", "mall", "cafe", "pub", "hotel", "flat", "rent",
+  "house", "pg", "hostel", "node", "javascript", "python", "code", "promise", "async",
+  "recipe", "who is", "weather", "temperature", "president", "math", "joke", "story",
+  "poem", "sightseeing", "attractions", "attraction"
 ];
 
-function isTrafficRelatedQuery(
-  query: string,
+// Traffic/commute intent keywords
+const TRAFFIC_INTENT_KEYWORDS = [
+  "traffic", "jam", "congestion", "choke", "speed", "slow", "delay", "travel time",
+  "how long", "condition", "status", "road", "drive", "commute", "flyover", "reach",
+  "which way", "clear", "stuck", "bottleneck", "rush", "peak", "fastest", "route",
+  "waterlog", "waterlogging", "bypass", "underpass", "time", "take"
+];
+
+interface ValidationResult {
+  isValid: boolean;
+  corridorId?: string;
+  rejectionMessage?: string;
+}
+
+function validateAndClassifyQuery(
+  rawQuery: string,
   history: { role: string; content: string }[] = []
-): { isValid: boolean; reason?: string } {
-  const q = query.trim().toLowerCase();
+): ValidationResult {
+  const q = rawQuery.trim().toLowerCase();
 
-  // 1. Length bounds
+  // 1. Minimum and Maximum length checks
   if (q.length < 3) {
-    return { isValid: false, reason: "Please enter a specific Hyderabad route or junction query." };
+    return {
+      isValid: false,
+      rejectionMessage: "Please enter a specific Hyderabad traffic or route query.",
+    };
   }
   if (q.length > 400) {
-    return { isValid: false, reason: "Your query is too long. Please keep it under 400 characters." };
+    return {
+      isValid: false,
+      rejectionMessage: "Query too long. Please keep questions under 400 characters.",
+    };
   }
 
-  // 2. Pure greetings & pleasantries
+  // 2. Greetings and Pleasantries check
   const socialOnly = /^(hi|hello|hey|hii+|helo|hai|good morning|good evening|how are you|what's up|thanks|thank you|ok|okay|bye|cool|great)[\s!.]*$/i;
   if (socialOnly.test(q)) {
     return {
       isValid: false,
-      reason:
-        "Namaste! I am your Hyderabad Transit AI specialist. Ask me about live commute routes, flyover traffic, or travel times across Hyderabad — e.g. *'AMB to DLF'* or *'Cyber Towers to Mindspace right now.'*",
+      rejectionMessage:
+        "Namaskaram! I am your Hyderabad Transit AI specialist. Ask me about live traffic conditions or routes for our supported corridors:\n\n* *'AMB to DLF'* \n* *'Traffic at Cyber Towers right now'* \n* *'Financial District to DLF: Wipro Circle vs ORR?'*",
     };
   }
 
-  // 3. Strict out-of-domain check (programming, trivia, jailbreak attempts)
-  for (const pattern of OUT_OF_DOMAIN_PATTERNS) {
-    if (pattern.test(q)) {
+  // 3. Non-traffic topic detection (e.g. 'famous spots in DLF', 'restaurants in Hitec City')
+  for (const nonTrafficWord of NON_TRAFFIC_INTENTS) {
+    if (q.includes(nonTrafficWord)) {
+      const placeMentioned = SUPPORTED_CORRIDORS.flatMap((c) => c.places).find((p) => q.includes(p));
+      const targetPlace = placeMentioned ? placeMentioned.toUpperCase() : "this area";
       return {
         isValid: false,
-        reason:
-          "I specialize exclusively in **Hyderabad transit routing, live road traffic, and commute advisory**. I cannot assist with programming, general technical queries, or non-transit topics.\n\nPlease ask a Hyderabad route query, for example:\n* *'AMB Cinemas to DLF Cyber City right now'* \n* *'Cyber Towers to Mindspace: flyover or bypass?'*\n* *'Financial District to DLF: Wipro Circle vs ORR?'*",
+        rejectionMessage: `ℹ️ **Non-Transit Query Intercepted:**\nI am exclusively a real-time **traffic, road condition, and commute routing AI**. I do not provide tourist spots, restaurant recommendations, shopping info, or general trivia for ${targetPlace}.\n\n👉 **Allowed query examples:**\n* *'Traffic in ${targetPlace}'*\n* *'${targetPlace} to DLF'*`,
       };
     }
   }
 
-  // 4. Check for known Hyderabad landmarks
-  const hasHydLocation = HYD_LOCATIONS.some((loc) => q.includes(loc));
-
-  // 5. Check for transit intent terms
-  const hasTransitIntent = TRANSIT_INTENT_WORDS.some((word) => q.includes(word));
-
-  // 6. Direct route pattern check: e.g. "from [x] to [y]" or "[x] to [y]"
-  const hasRoutePattern = /\b(from\s+[a-z0-9\s]+to\s+[a-z0-9\s]+|[a-z0-9\s]+\s+to\s+[a-z0-9\s]+)\b/i.test(q);
-
-  // 7. Contextual follow-up check: If user asks a short follow-up in an ongoing conversation
-  const isConversationalFollowUp =
-    history.length > 0 &&
-    (q.includes("sunday") ||
-      q.includes("rain") ||
-      q.includes("flyover") ||
-      q.includes("time") ||
-      q.includes("why") ||
-      q.includes("alternate") ||
-      q.includes("how long") ||
-      q.includes("faster") ||
-      q.includes("metro"));
-
-  if (hasHydLocation || (hasTransitIntent && (hasRoutePattern || isConversationalFollowUp)) || isConversationalFollowUp) {
-    return { isValid: true };
+  // 4. Unmonitored area detection (e.g. 'secunderabad traffic', 'kphb traffic')
+  for (const unmonitoredArea of UNMONITORED_HYD_AREAS) {
+    if (q.includes(unmonitoredArea)) {
+      const formattedArea = unmonitoredArea.charAt(0).toUpperCase() + unmonitoredArea.slice(1);
+      return {
+        isValid: false,
+        rejectionMessage: `⚠️ **Corridor Not Monitored:**\nOur real-time sensor network currently monitors **5 West Hyderabad transit corridors only**. **${formattedArea}** is outside our active sensor network.\n\n📍 **Monitored corridors currently in our database:**\n1. **AMB Cinemas ➔ DLF Cyber City** (Kondapur / Gachibowli)\n2. **Cyber Towers ➔ Mindspace & Raidurg** (Madhapur / HITEC City)\n3. **Financial District ➔ DLF Cyber City** (Wipro Circle / Gachibowli)\n4. **Gachibowli ➔ RGI Airport** (ORR Expressway)\n5. **Durgam Cheruvu Cable Bridge ➔ Jubilee Hills**\n\nPlease select one of the supported corridors above.`,
+      };
+    }
   }
 
-  // If none matched, reject with clear guidance
+  // 5. Match against our 5 supported corridors
+  let matchedCorridor = null;
+  for (const corridor of SUPPORTED_CORRIDORS) {
+    const hasPlace = corridor.places.some((p) => q.includes(p));
+    if (hasPlace) {
+      matchedCorridor = corridor;
+      break;
+    }
+  }
+
+  // Check for traffic intent or route patterns
+  const hasRoutePattern = /\b[a-z0-9\s]+\s+to\s+[a-z0-9\s]+\b/i.test(q);
+  const hasTrafficWord = TRAFFIC_INTENT_KEYWORDS.some((t) => q.includes(t));
+
+  // If matched a supported corridor AND has traffic intent or route pattern -> APPROVED
+  if (matchedCorridor && (hasRoutePattern || hasTrafficWord || q.split(/\s+/).length <= 4)) {
+    return {
+      isValid: true,
+      corridorId: matchedCorridor.id,
+    };
+  }
+
+  // 6. Conversational follow-up (in ongoing conversation with history)
+  if (history.length > 0 && (hasTrafficWord || q.includes("sunday") || q.includes("rain") || q.includes("delay"))) {
+    return {
+      isValid: true,
+    };
+  }
+
+  // 7. General fallback refusal
   return {
     isValid: false,
-    reason:
-      "I am a specialized Hyderabad Transit AI. I can only assist with road conditions, choke points, and route optimization between Hyderabad areas.\n\nTry asking:\n* *'AMB to DLF Cyber City'* \n* *'Cyber Towers to Mindspace live traffic'* \n* *'Financial District to DLF: which route is faster?'*",
+    rejectionMessage: `I can only answer real-time traffic queries for our monitored Hyderabad corridors.\n\n👉 **Try asking:**\n* *'AMB to DLF Cyber City'* \n* *'Traffic at Cyber Towers right now'* \n* *'Financial District to DLF: which route is faster?'*`,
   };
 }
 
@@ -119,19 +164,19 @@ export async function POST(req: NextRequest) {
     }
 
     const trimmed = message.trim();
-    const validation = isTrafficRelatedQuery(trimmed, history || []);
+    const validation = validateAndClassifyQuery(trimmed, history || []);
 
-    // Intercept out-of-domain, non-traffic, or jailbreak queries immediately
+    // If blocked, return immediately without invoking Gemini or TomTom APIs!
     if (!validation.isValid) {
       return NextResponse.json({
-        response: validation.reason,
+        response: validation.rejectionMessage,
         ragSources: [],
         liveTelemetry: null,
       });
     }
 
-    // Pass valid query and conversation history to the agent
-    const result = await runTransitAgent(trimmed, history || []);
+    // Call agent with validated query and corridor
+    const result = await runTransitAgent(trimmed, history || [], validation.corridorId);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("Chat API error:", error);

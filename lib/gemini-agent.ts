@@ -68,7 +68,8 @@ function matchJunction(
 
 export async function runTransitAgent(
   userQuery: string,
-  chatHistory: { role: "user" | "assistant"; content: string }[] = []
+  chatHistory: { role: "user" | "assistant"; content: string }[] = [],
+  explicitCorridorId?: string
 ): Promise<{
   response: string;
   ragSources: string[];
@@ -77,7 +78,10 @@ export async function runTransitAgent(
   const apiKey = process.env.GEMINI_API_KEY;
 
   // Step 1: Context-aware corridor matching & parallel sensor query
-  const matched = matchJunction(userQuery, chatHistory);
+  const matched =
+    (explicitCorridorId ? nodes.find((n) => n.id === explicitCorridorId) : null) ||
+    matchJunction(userQuery, chatHistory) ||
+    nodes[0];
 
   const [ragResults, liveTelemetry] = await Promise.all([
     searchKnowledgeBase(userQuery, 2),

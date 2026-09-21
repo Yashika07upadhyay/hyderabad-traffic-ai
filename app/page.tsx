@@ -24,7 +24,7 @@ export default function Home() {
     {
       role: "assistant",
       content:
-        "**Namaskaram! I am your Hyderabad Transit AI Specialist.**\n\nI combine local route intelligence across 25+ Hyderabad arterial corridors with real-time TomTom sensor telemetry. Ask me about live choke points, flyover vs underpass decisions, monsoon waterlogging risks, or fastest commute routes right now.",
+        "**Namaskaram! I am your Hyderabad Transit AI Specialist.**\n\nI track real-time traffic speeds and route optimization across **5 active corridors in our database**:\n1. **AMB Cinemas ➔ DLF Cyber City** (Kondapur / Gachibowli)\n2. **Cyber Towers ➔ Mindspace & Raidurg** (Madhapur / HITEC City)\n3. **Financial District ➔ DLF Cyber City** (Wipro Circle / Gachibowli)\n4. **Gachibowli ➔ RGI Airport** (ORR Expressway)\n5. **Durgam Cheruvu Cable Bridge ➔ Jubilee Hills** (Road 45)\n\n👉 **Allowed Query Types:**\n* **Route Queries:** *'AMB to DLF'*, *'Cyber Towers to Mindspace'*\n* **Live Area Traffic:** *'DLF traffic'*, *'Cyber Towers status'*\n\n*(Note: Non-traffic topics like food spots/general trivia or unmonitored areas like Secunderabad are blocked at the network gate to preserve sensor accuracy).*",
     },
   ]);
   const [input, setInput] = useState("");
@@ -242,18 +242,36 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Corridor Banner */}
-      <section className="border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-100/50 dark:bg-slate-900/40 px-4 py-2 text-xs">
-        <div className="mx-auto flex max-w-5xl items-center justify-between text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-3.5 w-3.5 text-rose-500" />
-            <span className="font-medium">Active Transit Corridors:</span>
-            <span className="hidden sm:inline">HITEC City • Gachibowli ORR • Cable Bridge • Ameerpet • PVNR Expressway • Airport Link</span>
-            <span className="sm:hidden">25+ Monitored Junctions</span>
+      {/* System Scope & Allowed Queries Policy Card */}
+      <section className="border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-100/70 dark:bg-slate-900/60 px-4 py-3 text-xs">
+        <div className="mx-auto max-w-5xl space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
+              <MapPin className="h-4 w-4 text-rose-500" />
+              <span>Active Database Corridors (5 Monitored Routes):</span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+              <span>Real-Time Sensor Telemetry Active</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>Telemetry Live</span>
+
+          <div className="flex flex-wrap gap-1.5 text-[11px] text-slate-600 dark:text-slate-400">
+            <span className="rounded-md bg-white dark:bg-slate-800 px-2 py-0.5 border border-slate-200 dark:border-slate-700 font-medium text-indigo-600 dark:text-indigo-400">1. AMB Cinemas ➔ DLF</span>
+            <span className="rounded-md bg-white dark:bg-slate-800 px-2 py-0.5 border border-slate-200 dark:border-slate-700 font-medium text-indigo-600 dark:text-indigo-400">2. Cyber Towers ➔ Mindspace</span>
+            <span className="rounded-md bg-white dark:bg-slate-800 px-2 py-0.5 border border-slate-200 dark:border-slate-700 font-medium text-indigo-600 dark:text-indigo-400">3. Financial District ➔ DLF</span>
+            <span className="rounded-md bg-white dark:bg-slate-800 px-2 py-0.5 border border-slate-200 dark:border-slate-700 font-medium text-indigo-600 dark:text-indigo-400">4. Gachibowli ➔ Airport (ORR)</span>
+            <span className="rounded-md bg-white dark:bg-slate-800 px-2 py-0.5 border border-slate-200 dark:border-slate-700 font-medium text-indigo-600 dark:text-indigo-400">5. Cable Bridge ➔ Jubilee Hills</span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/60 dark:border-slate-800/60 pt-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1.5">
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400">Allowed Query Formats:</span>
+              <span>Route comparisons (e.g. <em>&apos;AMB to DLF&apos;</em>) • Area traffic (e.g. <em>&apos;DLF traffic&apos;</em>, <em>&apos;Cyber Towers status&apos;</em>)</span>
+            </div>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+              *Non-traffic queries (food spots/general trivia) & unmonitored areas (Secunderabad) are strictly blocked.
+            </span>
           </div>
         </div>
       </section>
